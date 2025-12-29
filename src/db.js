@@ -6,8 +6,7 @@ import os from 'os';
 let adapter;
 
 try {
-  // Determine the database path
-  // On Vercel, we can only write to /tmp.
+   
   const isVercel = process.env.VERCEL === '1';
   let dbPath;
 
@@ -17,7 +16,7 @@ try {
       dbPath = path.resolve(process.cwd(), 'pastebin.db');
   }
 
-  // Ensure the directory exists
+   
   const dbDir = path.dirname(dbPath);
   if (!fs.existsSync(dbDir)) {
       fs.mkdirSync(dbDir, { recursive: true });
@@ -25,8 +24,7 @@ try {
 
   console.log(`Attempting to use SQLite at: ${dbPath}`);
   
-  // Attempt to initialize SQLite
-  // This might fail on Vercel if native bindings are missing or incompatible
+   
   const db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
 

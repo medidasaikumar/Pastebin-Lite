@@ -1,12 +1,9 @@
 import app from './src/app.js';
 
-// For Vercel, we export the app as default.
-// Vercel handles the server listening part automatically.
+ 
 export default app;
 
-// For local development, we want to listen on a port.
-// We can check if the file is being run directly.
-// In ES modules, we can check import.meta.url
+ 
 import { fileURLToPath } from 'url';
 import path from 'path';
 
