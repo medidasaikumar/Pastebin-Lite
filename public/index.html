@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastebin Lite</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --error-color: #ef4444;
+            --success-color: #22c55e;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin: 0;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.15s ease-in-out;
+            box-sizing: border-box;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            height: 300px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            resize: vertical;
+        }
+
+        .row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .success {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .error {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .result-content h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-content p {
+            margin: 0.25rem 0;
+        }
+
+        .result-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .result-content a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Pastebin Lite</h1>
+            <p>Clean and simple text sharing</p>
+        </div>
+
+        <div class="card">
+            <form id="pasteForm">
+                <div class="form-group">
+                    <label for="content">New Paste</label>
+                    <textarea id="content" name="content" required placeholder="Paste your code or text here..."></textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ttl">Expiration (TTL)</label>
+                            <input type="number" id="ttl" name="ttl_seconds" min="1" placeholder="Seconds (Optional)">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="maxViews">View Limit</label>
+                            <input type="number" id="maxViews" name="max_views" min="1" placeholder="Max views (Optional)">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn">Create Paste</button>
+            </form>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('pasteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('result');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+
+            const content = document.getElementById('content').value;
+            const ttlInput = document.getElementById('ttl').value;
+            const maxViewsInput = document.getElementById('maxViews').value;
+
+            const payload = {
+                content: content
+            };
+
+            if (ttlInput) {
+                payload.ttl_seconds = parseInt(ttlInput, 10);
+            }
+            if (maxViewsInput) {
+                payload.max_views = parseInt(maxViewsInput, 10);
+            }
+
+            try {
+                const response = await fetch('/api/pastes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `
+                        <div class="result-content">
+                            <h3>Paste Created Successfully!</h3>
+                            <p><strong>Share URL:</strong> <a href="${data.url}" target="_blank">${data.url}</a></p>
+                        </div>
+                    `;
+                    document.getElementById('pasteForm').reset();
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <div class="result-content">
+                            <h3>Error</h3>
+                            <p>${data.error || 'Failed to create paste'}</p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <div class="result-content">
+                        <h3>Network Error</h3>
+                        <p>${err.message}</p>
+                    </div>
+                `;
+            } finally {
+                resultDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Paste';
+            }
+        });
+    </script>
+</body>
+</html>
