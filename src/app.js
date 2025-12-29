@@ -20,7 +20,7 @@ const getNow = (req) => {
 };
 
 // 1) Health Check
-app.get('/api/healthz', (req, res) => {
+app.get('/healthz', (req, res) => {
   const isHealthy = db.checkHealth();
   if (isHealthy) {
     res.status(200).json({ ok: true });
@@ -30,7 +30,7 @@ app.get('/api/healthz', (req, res) => {
 });
 
 // 2) Create a Paste
-app.post('/api/pastes', (req, res) => {
+app.post('/pastes', (req, res) => {
   const { content, ttl_seconds, max_views } = req.body;
 
   // Validation
@@ -82,7 +82,7 @@ app.post('/api/pastes', (req, res) => {
 });
 
 // 3) Fetch a Paste (API)
-app.get('/api/pastes/:id', (req, res) => {
+app.get('/pastes/:id', (req, res) => {
   const { id } = req.params;
   const now = getNow(req);
 
