@@ -91,9 +91,7 @@ try {
   console.error('Failed to initialize SQLite. Falling back to In-Memory Store.', error);
   console.error('This is likely due to Vercel environment constraints with native modules.');
   
-  // Fallback: In-Memory Store
-  // Note: Data will be lost when the function "cold starts" (restarts), 
-  // but this ensures the app works for demos.
+   
   const memoryStore = new Map();
 
   adapter = {
@@ -116,10 +114,9 @@ try {
         return null;
       }
 
-      // Increment views
-      // Since it's in-memory, we modify the object directly (or careful with references)
+       
       paste.views += 1;
-      return { ...paste }; // Return a copy
+      return { ...paste }; 
     },
     checkHealth: () => true
   };
