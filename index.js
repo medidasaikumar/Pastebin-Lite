@@ -1,7 +1,12 @@
-import app from './src/app.js';
+// import app from './src/app.js';
 
  
-export default app;
+// export default app;
+import serverless from 'serverless-http';
+import app from './src/app.js';
+
+export const handler = serverless(app);
+
 
  
 // import { fileURLToPath } from 'url';
