@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     const id = nanoid()
     const now = Date.now()
 
-    db.insertPaste({
+    await db.insertPaste({
       id,
       content,
       created_at: now,

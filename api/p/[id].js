@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   const { id } = req.query
   const now = Date.now()
-  const paste = db.getPaste(id, now)
+  const paste = await db.getPaste(id, now)
 
   if (!paste) {
     let stateless = null
