@@ -12,13 +12,37 @@ export default async function handler(req, res) {
   const paste = db.getPaste(id, now)
 
   if (!paste) {
-    res.status(404).send('<h1>404 - Paste not found or unavailable</h1>')
+    let stateless = null
+    try {
+      const raw = Buffer.from(id, 'base64url').toString('utf8')
+      const payload = JSON.parse(raw)
+      if (payload && typeof payload.content === 'string') {
+        const exp = payload.expires_at ?? null
+        if (exp === null || exp > now) {
+          stateless = { content: payload.content, expires_at: exp, views: null, max_views: null }
+        }
+      }
+    } catch {}
+    if (!stateless) {
+      res.status(404).send('<h1>404 - Paste not found or unavailable</h1>')
+      return
+    }
+    const safe = escapeHtml(stateless.content)
+    const html = renderHtml(id, safe, stateless.expires_at, stateless.views, stateless.max_views)
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.status(200).send(html)
     return
   }
 
   const safe = escapeHtml(paste.content)
 
-  const html = `<!DOCTYPE html>
+  const html = renderHtml(id, safe, paste.expires_at, paste.views, paste.max_views)
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.status(200).send(html)
+}
+
+function renderHtml(id, safeContent, expiresAt, views, maxViews) {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -44,12 +68,12 @@ export default async function handler(req, res) {
       <div class="header">
         <h1>Paste #${id}</h1>
         <div class="meta">
-          ${paste.expires_at ? `Expires: ${new Date(paste.expires_at).toLocaleString()}` : 'Never Expires'} 
+          ${expiresAt ? `Expires: ${new Date(expiresAt).toLocaleString()}` : 'Never Expires'} 
           <span style="margin:0 .5rem">|</span>
-          ${paste.max_views ? `Views: ${paste.views}/${paste.max_views}` : `Views: ${paste.views}`}
+          ${maxViews ? `Views: ${views}/${maxViews}` : (views === null ? 'Views: N/A' : `Views: ${views}`)}
         </div>
       </div>
-      <pre>${safe}</pre>
+      <pre>${safeContent}</pre>
       <div class="actions">
         <a href="/" class="btn">Create New Paste</a>
       </div>
@@ -57,7 +81,4 @@ export default async function handler(req, res) {
   </div>
 </body>
 </html>`
-
-  res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.status(200).send(html)
 }

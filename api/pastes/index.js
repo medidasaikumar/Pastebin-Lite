@@ -49,7 +49,11 @@ export default async function handler(req, res) {
     const host = req.headers['x-forwarded-host'] || req.headers.host
     const url = `${protocol}://${host}/p/${id}`
 
-    res.status(201).json({ id, url })
+    const tokenPayload = { content, expires_at: expiresAt }
+    const token = Buffer.from(JSON.stringify(tokenPayload), 'utf8').toString('base64url')
+    const token_url = `${protocol}://${host}/p/${token}`
+
+    res.status(201).json({ id, url, token_url })
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' })
   }
