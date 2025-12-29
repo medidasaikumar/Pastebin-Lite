@@ -1,8 +1,30 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+import Database from 'better-sqlite3';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
 
- 
-const dbPath = path.resolve(process.cwd(), 'pastebin.db');
+// Determine the database path
+// On Vercel, we can only write to /tmp.
+// We check if we are in a read-only environment or just default to /tmp for safety in serverless.
+// However, 'os.tmpdir()' is safer.
+
+const isVercel = process.env.VERCEL === '1';
+let dbPath;
+
+if (isVercel) {
+    dbPath = path.join(os.tmpdir(), 'pastebin.db');
+} else {
+    dbPath = path.resolve(process.cwd(), 'pastebin.db');
+}
+
+// Ensure the directory exists (mostly for local dev if not using cwd)
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
+console.log(`Using database at: ${dbPath}`);
+
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
@@ -49,9 +71,6 @@ const getPaste = db.transaction((id, now) => {
   const update = db.prepare('UPDATE pastes SET views = views + 1 WHERE id = ?');
   update.run(id);
 
-  
-  
-   
   paste.views += 1;
   
   return paste;
@@ -67,7 +86,7 @@ const checkHealth = () => {
   }
 };
 
-module.exports = {
+export default {
   insertPaste,
   getPaste,
   checkHealth

@@ -1,14 +1,14 @@
-const express = require('express');
-const { nanoid } = require('nanoid');
-const escapeHtml = require('escape-html');
-const db = require('./db');
+import express from 'express';
+import { nanoid } from 'nanoid';
+import escapeHtml from 'escape-html';
+import db from './db.js';
 
 const app = express();
 
 // Parse JSON bodies
 app.use(express.json());
 
-// Helper to determine current time 
+// Helper to determine current time (handling TEST_MODE)
 const getNow = (req) => {
   if (process.env.TEST_MODE === '1' && req.headers['x-test-now-ms']) {
     const testTime = parseInt(req.headers['x-test-now-ms'], 10);
@@ -19,7 +19,7 @@ const getNow = (req) => {
   return Date.now();
 };
 
-// ealth Check
+// 1) Health Check
 app.get('/api/healthz', (req, res) => {
   const isHealthy = db.checkHealth();
   if (isHealthy) {
@@ -29,7 +29,7 @@ app.get('/api/healthz', (req, res) => {
   }
 });
 
-// Create a Paste
+// 2) Create a Paste
 app.post('/api/pastes', (req, res) => {
   const { content, ttl_seconds, max_views } = req.body;
 
@@ -81,7 +81,7 @@ app.post('/api/pastes', (req, res) => {
   }
 });
 
-// Fetch a Paste (API)
+// 3) Fetch a Paste (API)
 app.get('/api/pastes/:id', (req, res) => {
   const { id } = req.params;
   const now = getNow(req);
@@ -112,7 +112,7 @@ app.get('/api/pastes/:id', (req, res) => {
   }
 });
 
-// View a Paste (HTML)
+// 4) View a Paste (HTML)
 app.get('/p/:id', (req, res) => {
   const { id } = req.params;
   const now = getNow(req);
@@ -126,7 +126,7 @@ app.get('/p/:id', (req, res) => {
 
     const safeContent = escapeHtml(paste.content);
     
-     
+    // Minimal HTML
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -255,4 +255,4 @@ app.get('/p/:id', (req, res) => {
 // Serve static files (for frontend)
 app.use(express.static('public'));
 
-module.exports = app;
+export default app;
