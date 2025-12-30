@@ -34,20 +34,34 @@ export default async function handler(req, res) {
       maxViews = max_views
     }
 
-    const id = nanoid()
+    const hasKV = !!process.env.KV_REST_API_URL && !!process.env.KV_REST_API_TOKEN
+    const hasUpstash = !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN
+    const hasStore = hasKV || hasUpstash
     const now = Date.now()
 
-    await db.insertPaste({
-      id,
-      content,
-      created_at: now,
-      expires_at: expiresAt,
-      max_views: maxViews
-    })
+    let id
+    let url
+
+    if (hasStore) {
+      id = nanoid()
+      await db.insertPaste({
+        id,
+        content,
+        created_at: now,
+        expires_at: expiresAt,
+        max_views: maxViews
+      })
+    } else {
+      const payload = {
+        content,
+        expires_at: expiresAt ?? null
+      }
+      id = Buffer.from(JSON.stringify(payload)).toString('base64url')
+    }
 
     const protocol = req.headers['x-forwarded-proto'] || 'https'
     const host = req.headers['x-forwarded-host'] || req.headers.host
-    const url = `${protocol}://${host}/api/p/${id}`
+    url = `${protocol}://${host}/api/p/${id}`
 
     res.status(201).json({ id, url })
   } catch (err) {
