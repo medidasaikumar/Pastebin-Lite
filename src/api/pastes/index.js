@@ -61,7 +61,7 @@ export default async function handler(req, res) {
 
     const protocol = req.headers['x-forwarded-proto'] || 'https'
     const host = req.headers['x-forwarded-host'] || req.headers.host
-    url = `${protocol}://${host}/api/p/${id}`
+    url = `${protocol}://${host}/p/${id}`
 
     res.status(201).json({ id, url })
   } catch (err) {
